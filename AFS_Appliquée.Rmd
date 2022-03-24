@@ -94,8 +94,7 @@ q<-Hellingerizer(f)
 
 
 II PARTIE PRATIQUE:
-Coeur de la méthode
-Premiere méthode, comparaison de deux tableaux de fréquences:
+Coeur de la méthode:
 
 ```{r}
 AFS<-function(t,mI,mJ){
@@ -115,15 +114,16 @@ AFS<-function(t,mI,mJ){
 w<-(H%*%U)/sqrt(lambda)
   
 
-  F<-rep(0,length(I))
+  composante_F<-rep(0,length(I))
   
+  for (k in 1:length(w[,1])){
   for (i in 1:I){
-    F[i]<-X[i]%*%u
+    composante_F[k,i]<-X[i,]%*%u
     }
   for (j in 1:J){
-    G[j]<-w%*%Y[j]
+    composante_G[k,j]<-Y[,j]%*%w
   }
-
+}
 ##INDICATEURS: 
   for  (i in 1:I){
   CONTR[i]<-sum(H[i,])/sum(H^2) ##contribution d'un axe à l'inertie totale
@@ -149,14 +149,6 @@ selection_des_axes<-data.frame("Rang"=(1:length(lambda_V)),"Proportion d'inertie
   
 }  
 
-A<-data.frame(inertie=c(1,2,3),rang=c(1,2,3))
-A
-BLA<-eigen(f)
-sum(BLA$vectors[,1]^2)
-
-(f%*%BLA$vectors[,1])/BLA$vectors[,1]
-
-BLA$vectors[,1]
 
 ```
 
