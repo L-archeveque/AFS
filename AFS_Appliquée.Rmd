@@ -1,0 +1,165 @@
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\title{AFS}
+\authors{Larchevêque Valentin et Thibaut Balsan}
+\begin{document}
+
+\maketitle
+\section{Introduction}
+L'objectif de ce travail est de se concentrer sur la méthode d'analyse factorielle sphérique de tableaux de données de manière théorique puis d'en faire l'application à des tableaux concrets. Nous nous baserons essentiellement pour ce faire sur les annales n°35 de l'INSEE (1979), article fondateur de la méthode développée par Dominiques DOMENGES et Michel VOLLE, ainsi que sur nos cours d'analyse factorielle dispensés au premier semestre par M. Xavier Bry.
+
+Dans une première partie nous accumulerons des démonstrations théoriques faisant le lien entre les formulaires de l'ACP classique et celle de l'AFS, tout en créant les fonctions R nous permettant la mise en pratique de la méthode, puis dans une deuxième partie nous utiliserons la dîte méthode sur deux tableaux de données de notre choix : {inserez tablos :)}
+
+##AFAIRE
+L'afs est une acp
+la metrique de hellinger
+
+Programme qui prend notre matrice ou qui fabrique les pi
+et qui les transforme en racine pour les mettres sur la sphere unité
+on a une matrice Z
+ensuite il reste à faire l'ACP à programmer avec des poids qui sont l'identitété
+on diago ZZ' ou Z'Z et apres on fera des graphiques, Métrique euclidenne cannonique
+matrice d'inertie et sortir les valeurs propres
+
+en latec semaine pro, deux pages de latec demonstrations de lien dualité + ACP theorique+ debut de code
+Matrices de commerce en applications
+
+
+Frequences marginales MI et MJ sont à laisser en entrée
+on pourra selon le formulaire à
+prgorammer le noyau et au dehors il faut des fonctions pour s'adapter
+pour l'instant deux tableaux de fréquences et deux distributions mI et mJ '
+##FINAFAIRE
+
+
+
+
+
+\section{PARTIE I: Coeur de la méthode.}
+
+\section{Transformation des données:}
+
+Le but de cette partie est de placer les individus de notre tableau de distributions sur la shpère unité entière et non seulement sur l'orthan positif. On peut donc également calculer des distances entre distributions comportant des valeurs négatives. Pour celà on remplace 
+Pour cela nous allons changer la métrique que l'on utilise pour calculer les distances de la métrique du $\chi^2$ à la métrique de Hellinger.
+On dote d'abord la sphère unité d'équation $\sum |pi|=1$ du le produit scalaire:
+$$<p,q>_\mathcal{H}=\sum signe(p_iq_i)\sqrt{|pi|.|qi|}$$
+On a donc également la norme carré associée sur cet ensemble qui vaut 1 pour tout p de la sphère unité
+
+$$||p||_\mathcal{H}^2=<p,p>_\mathcal{H}=\sum signe(p_i^2)\sqrt{|pi|^2}=\sum|p_i|=1$$
+
+
+Donnant la distance sur la sphère unité dite de Hellinger définie par:
+$$d_{\mathcal{H}}(p,q)^2=||p-q||^2_{\mathcal{H}}=<p-q,p-q>_\mathcal{H}\\=||p||^2_\mathcal{H}+||q||^2_\mathcal{H}-2<p,q>_\mathcal{H}=\sum signe(p_i^2)\sqrt{|pi|^2}+\sum signe(q_i^2)\sqrt{|qi|^2}-2\sum signe(p_iq_i)\sqrt{|pi|.|qi|}\\=\sum signe(p_i)^2\sqrt{|p_i|}^2+signe(q_i)^2\sqrt{|q_i|}^2-2signe(p_i)signe(q_i)\sqrt{|p_i|.|q_i|}\\
+=\sum(signe(p_{i}){\sqrt{|p_{i}|}-(signe(q_{i})\sqrt{|q_{i}|}})^2  $$
+Tout d'abord commençons par montrer que calculer $d_{\mathcal{H}}(f,\varphi)$ entre une tableaux $f$ et un tableau $\varphi$ de distributions revient à calculer la distance euclidienne $d_{2}(Z,\zeta)$ avec $Z,\zeta$ les tableaux $f,\varphi$  transformés (au sens de la métrique canonique)
+
+$$Si~\forall~i,j~~(Z_{ij})=signe(f_{ij})\times(\sqrt{|{f_{ij}}|})~et~(\zeta_{ij})=signe(\varphi_{ij})\times(\sqrt{|\varphi_{ij}|})~alors~on~a~:~$$
+
+
+
+$$d_{2}(Z,\zeta)=||({Z_{ij}-\zeta_{ij}})||^2=||Z_{ij}||^2+||\zeta_{ij}||^2-2<Z_{ij},\zeta_{ij}>  \\=
+||(signe(f_{ij})(\sqrt{|{f_{ij}}|})||^2+||signe(\varphi_{ij})(\sqrt{|\varphi_{ij}|}))||^2-2signe(f_{ij}\varphi_{ij}) \\=\\
+
+
+
+= \sum_{i,j}(signe(f_{ij})(\sqrt{|{f_{ij}}|})-signe(\varphi_{ij})(\sqrt{|\varphi_{ij}|}))^2  = 
+
+
+
+d_{\mathcal{H}}(f,\varphi)^2$$
+
+
+
+
+\section { Différence de tableaux de fréquences:}
+Soit un tableau f de fréquences $(f_{ij})$ et un tableau $(\varphi_{ij})$
+
+
+```{r}
+##Example a table f and phi
+f<-matrix((-17:18),6,6)/sum(-17:18)
+phi<-matrix(rep(1/36,36),6,6)
+f
+
+source("AFS_functions.R")
+q<-Hellingerizer(f)
+
+
+
+
+```
+
+
+
+
+II PARTIE PRATIQUE:
+Coeur de la méthode
+Premiere méthode, comparaison de deux tableaux de fréquences:
+
+```{r}
+AFS<-function(t,mI,mJ){
+
+  H<-Hellingerizer(t)
+  I<-length(mI)
+  J<-length(mJ)
+  X<-Nuage_X(H,mI)
+  Y<-Nuage_Y(H,mJ)
+ 
+  ##diagonalisation de l'inertie de X
+  V<-aperm(H)%*%H
+  lambda<-eigen(V)$values
+  u<-eigen(V)$vectors 
+  
+  ##w vecteur propre de TT' associé à lambda 
+w<-(H%*%U)/sqrt(lambda)
+  
+
+  F<-rep(0,length(I))
+  
+  for (i in 1:I){
+    F[i]<-X[i]%*%u
+    }
+  for (j in 1:J){
+    G[j]<-w%*%Y[j]
+  }
+
+##INDICATEURS: 
+  for  (i in 1:I){
+  CONTR[i]<-sum(H[i,])/sum(H^2) ##contribution d'un axe à l'inertie totale
+  CTR[i,alpha]<-w[i,alpha]^2    ##contribution d'un individu i à l'inertie de l'axe alpha
+  cos_2[i,alpha]<-(lambda_V[alpha]*w[i,alpha]^2)/sum(H[i,]) ##part visible de l'interie de l'individu i sur l'axe alpha
+  }
+  
+
+  
+  
+  
+  
+  print ("Proportions inertielles des valeurs propres")
+selection_des_axes<-data.frame("Rang"=(1:length(lambda_V)),"Proportion d'inertie"=lambda_V/sum(H^2),"Proportion d'inertie cumulée"=cumsum(lambda_V/sum(T^2)))
+  selection_des_axes
+            
+  
+  
+  
+  
+  
+            return(AFS)
+  
+}  
+
+A<-data.frame(inertie=c(1,2,3),rang=c(1,2,3))
+A
+BLA<-eigen(f)
+sum(BLA$vectors[,1]^2)
+
+(f%*%BLA$vectors[,1])/BLA$vectors[,1]
+
+BLA$vectors[,1]
+
+```
+
+
+
+\end{document}
