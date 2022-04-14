@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 
 \documentclass{article}
 \usepackage[utf8]{inputenc}
@@ -15,32 +20,31 @@ Dans une première partie nous accumulerons des démonstrations théoriques fais
 L'afs est une acp
 la metrique de hellinger
 
-Programme qui prend notre matrice ou qui fabrique les pi
-et qui les transforme en racine pour les mettres sur la sphere unité
-on a une matrice Z
-ensuite il reste à faire l'ACP à programmer avec des poids qui sont l'identitété
-on diago ZZ' ou Z'Z et apres on fera des graphiques, Métrique euclidenne cannonique
-matrice d'inertie et sortir les valeurs propres
-
-en latec semaine pro, deux pages de latec demonstrations de lien dualité + ACP theorique+ debut de code
-Matrices de commerce en applications
+##AFAIRE 2 : 
+rédiger le fondement informationnel de la métrique de Hellinger et traduction euclidienne sur les données transformées, 
 
 
-Frequences marginales MI et MJ sont à laisser en entrée
-on pourra selon le formulaire à
+Tester le programme, appliquer la vu des différences sur les f moins phi, 
 prgorammer le noyau et au dehors il faut des fonctions pour s'adapter
 pour l'instant deux tableaux de fréquences et deux distributions mI et mJ '
+puis comparer un tableau au produit de ses marges 
 ##FINAFAIRE
+##AFAIRE3:
+Appliquer la comparaison d'un tableau de fréquence 
 
 
 
 
+  H<-Hellingerizer(t)
+
+
+  H<-Hellingerizer(t)
 
 \section{PARTIE I: Coeur de la méthode.}
 
 \section{Transformation des données:}
 
-Le but de cette partie est de placer les individus de notre tableau de distributions sur la shpère unité entière et non seulement sur l'orthan positif. On peut donc également calculer des distances entre distributions comportant des valeurs négatives. Pour celà on remplace 
+Le but de cette partie est de placer les individus de notre tableau de distributions sur la sphère unité entière et non seulement sur l'orthan positif. On peut donc également calculer des distances entre distributions comportant des valeurs négatives. Pour celà on remplace 
 Pour cela nous allons changer la métrique que l'on utilise pour calculer les distances de la métrique du $\chi^2$ à la métrique de Hellinger.
 On dote d'abord la sphère unité d'équation $\sum |pi|=1$ du le produit scalaire:
 $$<p,q>_\mathcal{H}=\sum signe(p_iq_i)\sqrt{|pi|.|qi|}$$
@@ -82,7 +86,7 @@ f<-matrix((-17:18),6,6)/sum(-17:18)
 phi<-matrix(rep(1/36,36),6,6)
 f
 
-source("AFS_functions.R")
+
 q<-Hellingerizer(f)
 
 
@@ -97,57 +101,114 @@ II PARTIE PRATIQUE:
 Coeur de la méthode:
 
 ```{r}
+library(ggplot2)
+library(data.table)
+
+##Methode générale, le tableau définit la méthode que 'on appliquera 
+source("AFS_functions.R")
+
+  
+f<-matrix(c(84,36,23,11,32,64,21,79,23,68,53,46,14,56,13,20,1,13,42,21),5,4,byrow=T)
+f
+ t<-depistage(t) 
+
+t<-turn_to_freq(t)
+mI<-poids_lignes(t)
+J<-poids_colonne(t)
+
+phi<-matrix(mI,ncol=1)%*%aperm(matrix(mJ,ncol = 1))
+aperm(matrix(mJ,ncol = 1))
+matrix(mI,ncol=1)
+
+Tableau_final<-Hellingerizer(t)-Hellingerizer(phi)
+
+A<-AFS(Tableau_final,mI,mJ)
+min(length(mI),length(mJ))
+
+
+
+
+
 AFS<-function(t,mI,mJ){
 
-  H<-Hellingerizer(t)
-  I<-length(mI)
-  J<-length(mJ)
-  X<-Nuage_X(H,mI)
-  Y<-Nuage_Y(H,mJ)
+
+  print(t)
+##Choix de l'analyse 
+I<-length(t[,1])
+J<-length(t[1,])
  
-  ##diagonalisation de l'inertie de X
-  V<-aperm(H)%*%H
-  lambda<-eigen(V)$values
-  u<-eigen(V)$vectors 
+
+X<-Nuage_X(t,mI)
+Y<-Nuage_Y(t,mJ)
+ 
+  ##diagonalisation de l'inertie du nuage de plus petite dimension:
+
+
+V<-aperm(t)%*%t
+ lambda<-eigen(V)$values
+  Dlambda<-diag(1/sqrt(lambda))
+  U<-eigen(V)$vectors 
   
   ##w vecteur propre de TT' associé à lambda 
-w<-(H%*%U)/sqrt(lambda)
-  
+w<-(t%*%U)%*%Dlambda
+    nbvrp<-min(5,length(lambda))
+  composante_G<-matrix(0,nbvrp,J)
+  composante_F<-matrix(0,nbvrp,I)
 
-  composante_F<-rep(0,length(I))
-  
-  for (k in 1:length(w[,1])){
+  for (k in 1:nbvrp){
   for (i in 1:I){
-    composante_F[k,i]<-X[i,]%*%u
+    composante_F[k,i]<-X[i,]%*%U[,k]
     }
   for (j in 1:J){
-    composante_G[k,j]<-Y[,j]%*%w
+    composante_G[k,j]<-Y[,j]%*%w[,k]
   }
-}
+  }
+  CONTR<-rep(0,nbvrp)
+  CTR<- matrix(0,I,nbvrp)
+  cos_2<-CTR
 ##INDICATEURS: 
   for  (i in 1:I){
-  CONTR[i]<-sum(H[i,])/sum(H^2) ##contribution d'un axe à l'inertie totale
+  CONTR[i]<-sum(t[i,])/sum(t^2) ##contribution d'un axe à l'inertie totale
+  for (alpha in 1:nbvrp){
   CTR[i,alpha]<-w[i,alpha]^2    ##contribution d'un individu i à l'inertie de l'axe alpha
-  cos_2[i,alpha]<-(lambda_V[alpha]*w[i,alpha]^2)/sum(H[i,]) ##part visible de l'interie de l'individu i sur l'axe alpha
-  }
+  cos_2[i,alpha]<-(lambda[alpha]*w[i,alpha]^2)/sum(t[i,]^2) ##part visible de l'interie de l'individu i sur l'axe alpha
+  }}
   
 
   
+  ## minimum des deux dimensons en valeur par défaut dans la sélection des axes
   
-  
-  
-  print ("Proportions inertielles des valeurs propres")
-selection_des_axes<-data.frame("Rang"=(1:length(lambda_V)),"Proportion d'inertie"=lambda_V/sum(H^2),"Proportion d'inertie cumulée"=cumsum(lambda_V/sum(T^2)))
-  selection_des_axes
+ 
+selection_des_axes<-data.frame("Rang"=(1:nbvrp),"Proportion d'inertie"=lambda[1:nbvrp]/sum(t^2),"Proportion d'inertie cumulée"=cumsum(lambda[1:nbvrp]/sum(t^2)))
+ 
+View(selection_des_axes)
             
-  
-  
-  
-  
-  
+
+ 
+
+ AFS=new("ACP",lbd=lambda[1:nbvrp],U_vects=U,W_vects=w,compos_F=composante_F,compos_G=composante_G,cos2=cos_2,CTR=CTR,CONTR=CONTR)
+ 
+
+ 
             return(AFS)
   
 }  
+mI<-depistage_ligne(f)
+mJ<-depistage_colonne(f)
+A<-AFS(f)
+C<-as.data.frame(A@compos_F)
+ggplot(C,aes(x=C[1,],y=C[2,]))+geom_point()+xlab(label = "AXE 1")+ylab(label = "AXE 2")+coord_fixed()
+
+
+print(C[1,])
+
+
+
+length(C)
+View(C[1,])
+View(C[2,])
+help("%>%")
+ plot(A@compos_F[1,],A@compos_F[2,],type='p',col='red')
 
 
 ```
