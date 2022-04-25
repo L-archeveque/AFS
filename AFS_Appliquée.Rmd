@@ -35,10 +35,6 @@ Appliquer la comparaison d'un tableau de fréquence
 
 
 
-  H<-Hellingerizer(t)
-
-
-  H<-Hellingerizer(t)
 
 \section{PARTIE I: Coeur de la méthode.}
 
